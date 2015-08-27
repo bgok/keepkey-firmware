@@ -18,6 +18,24 @@ else:
     # Grab it from the path
     CROSS_COMPILE='arm-none-eabi-'
 
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+print "pkhoo: arm-none......py ..................................."
+
 OPENCM3_ROOT = os.path.join(Dir('#').abspath, 'libopencm3')
 
 SCM_REVISION = os.popen("git rev-parse HEAD").read().rstrip()
@@ -46,7 +64,7 @@ WARNS=['-Wall',
        '-Wpointer-arith',
        '-Wredundant-decls',
        '-Wreturn-type',
-       '-Wshadow',
+#       '-Wshadow',
        '-Wsign-compare',
        '-Wstrict-prototypes',
        '-Wundef',
@@ -92,6 +110,7 @@ def load_toolchain():
     env['LIBPREFIXES']  = [ '$LIBPREFIX' ]
     env['LIBSUFFIXES']  = [ '$LIBSUFFIX' ]
 
+    print "pkhoo  xxxxxxxxxxxxxxxxxxxxxxxxxxx",  os.getenv('PWD')
 
     env['CCFLAGS'] = [
             '-mthumb',

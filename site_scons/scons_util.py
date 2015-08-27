@@ -156,7 +156,7 @@ def init_project(env, deps=None, libs=None, project_defines=None):
     bindir = os.path.join(env['VARIANT_BASE_DIR'], 'bin')
     libdir = os.path.join(env['VARIANT_BASE_DIR'], 'lib')
 
-    print('--------------------' + project_name + '----------------------')
+    print('---------------abcdpkhoo--' + project_name + '----------------------')
 
     if deps != None:
         deps = expand_deps(deps)
@@ -176,6 +176,8 @@ def init_project(env, deps=None, libs=None, project_defines=None):
         linkflags = env['LINKFLAGS'] + ['-T' + Dir('#').abspath + '/memory_bootloader.ld']
     else:
         linkflags = env['LINKFLAGS'] + ['-T' + Dir('#').abspath + '/memory.ld']
+
+    print "linkflags: ", env['LINKFLAGS']
 
     project_flavors = {}
     if project_name in flavor_map:
@@ -204,18 +206,21 @@ def init_project(env, deps=None, libs=None, project_defines=None):
     # 
     # Build support project library
     #
+    print "pkhoo: ", libdir, project_name
     support_library = env.StaticLibrary(os.path.join(libdir, project_name), 
                               support_files,
                               CPPPATH=include_paths + dep_include_paths,
                               CPATH=include_paths + dep_include_paths)
 
-    print "Library: lib%s library added" % project_name
+    print "Library: lib%s library added" % project_name, support_library
 
     # 
     # Create exe targets
     #
     deplibs = [support_library]
     deplibpaths = [support_library[0].get_dir()]
+
+    print "pkhoo deplibs : ", deplibs, deplibpaths 
 
     if(deps != None):
         deplibs.append(deps)
@@ -225,6 +230,7 @@ def init_project(env, deps=None, libs=None, project_defines=None):
     if(libs != None):
 	deplibs.append(libs)
 
+    st_crypto_lib = '/mnt/hgfs/VmShared/DeviceDev/gitHub/exp_fw/st_crypto/M3_CryptoFW_RngHW_2_0_6.lib'
     platform_libs = ''
     if(build_os == 'linux'):
         platform_libs = '-Wl,-Bdynamic -lbsd'
@@ -234,7 +240,7 @@ def init_project(env, deps=None, libs=None, project_defines=None):
         exe = env.Program(os.path.join(bindir, exename), 
                       exe_source, 
                       LIBS=[deplibs], 
-                      _LIBFLAGS= '-Wl,--start-group ' + env['_LIBFLAGS'] + ' -Wl,--end-group ' + platform_libs,
+                      _LIBFLAGS= '-Wl,--start-group ' + env['_LIBFLAGS'] + ' -Wl,--end-group ' + platform_libs +  st_crypto_lib,
                       LINKFLAGS=linkflags,
 		              LIBPATH=deplibpaths,
                       CPPPATH=include_paths + dep_include_paths,
@@ -249,6 +255,7 @@ def init_project(env, deps=None, libs=None, project_defines=None):
 
         print 'Program: %s added' % exename
 
+    print "pkhoo aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: "
 #
 # Initialize the platform specification, following the gnu tuple concept.
 #
