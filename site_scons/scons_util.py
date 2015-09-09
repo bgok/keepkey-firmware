@@ -230,7 +230,7 @@ def init_project(env, deps=None, libs=None, project_defines=None):
     if(libs != None):
 	deplibs.append(libs)
 
-    st_crypto_lib = '/mnt/hgfs/VmShared/DeviceDev/gitHub/exp_fw/st_crypto/M3_CryptoFW_RngHW_2_0_6.lib'
+    st_crypto_lib = '/home/philip/proj/Bench/DeviceDev/gitHub/p_aes/st_crypto/M3_CryptoFW_RngHW_2_0_6.lib'
     platform_libs = ''
     if(build_os == 'linux'):
         platform_libs = '-Wl,-Bdynamic -lbsd'
