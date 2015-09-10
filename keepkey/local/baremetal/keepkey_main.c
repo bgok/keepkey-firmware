@@ -75,7 +75,7 @@ static void screen_test(void)
     
 /* === Functions =========================================================== */
 
-void st_aes_cbc(void);
+void test_aes(void);
 /*
  * main() - Application main entry
  *
@@ -95,7 +95,7 @@ int main(void)
     dbg_print("Application Version %d.%d.%d\n\r", MAJOR_VERSION, MINOR_VERSION,
               PATCH_VERSION);
 
-    st_aes_cbc();
+    test_aes();
     /* Init storage */
     storage_init();
 

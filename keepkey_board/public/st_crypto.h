@@ -1,22 +1,25 @@
 /** @defgroup AESError AES Error Codes 
   * @{
   */
+
 #define AES_SUCCESS             (int32_t) (0)    /*!< AES of PRIVKEY Success */
 #define AES_ERR_BAD_INPUT_SIZE  (int32_t) (3101) /*!<  AES of PRIVKEY Invalid input size */
 #define AES_ERR_BAD_OPERATION   (int32_t) (3102) /*!<  AES of PRIVKEY Invalid operation */
 #define AES_ERR_BAD_CONTEXT     (int32_t) (3103) /*!<  AES of PRIVKEY The AES context contains some invalid or uninitialized values */
 
 #define AES_ERR_BAD_PARAMETER   (int32_t) (3104) /*!<  AES of PRIVKEY One of the expected function parameters is invalid */
-#define INCLUDE_AES192  /*!< This defines if AES functions with key size of 192 bit are included in the library \n If it's \b NOT defined then aes192.c is not needed. */
 
-
+// #define INCLUDE_AES192  /*!< This defines if AES functions with key size of 256 bit are included in the library \n If it's \b NOT defined then aes192.c is not needed. */
+#define INCLUDE_AES256  /*!< This defines if AES functions with key size of 256 bit are included in the library \n If it's \b NOT defined then aes256.c is not needed. */
 
 #ifdef INCLUDE_AES256
 # define CRL_AES_MAX_EXPKEY_SIZE 60 /*!< The max size of the AES expanded key (in uint32_t) according to the INCLUDE OPTIONS */
 # else
+#error pkhoo (192)
 #   ifdef INCLUDE_AES192
 #     define CRL_AES_MAX_EXPKEY_SIZE 52 /*!< The max size of the AES expanded key (in uint32_t) according to the INCLUDE OPTIONS */
 #   else
+#error pkhoo (128)
 #     define CRL_AES_MAX_EXPKEY_SIZE 44 /*!< The max size of the AES expanded key (in uint32_t) according to the INCLUDE OPTIONS */
 #   endif
 #endif /*include aes 256 */
