@@ -2,6 +2,7 @@
 #include <st_crypto.h>
 #include "keepkey_board.h"
 #include <keepkey_usart.h>
+#include <aes.h>
 
 extern int32_t AES_CBC_Encrypt_Init(AESCBCctx_stt *, uint8_t *, uint8_t *);
 extern int32_t AES_CBC_Encrypt_Append(AESCBCctx_stt *, uint8_t *, uint32_t, uint8_t *, int32_t *);
@@ -108,7 +109,6 @@ void dump_bfr(uint8_t out_buf[], uint32_t cnt)
     uint32_t i;
     if(cnt)
     {
-        dbg_print("..... \n\r");
         for(i = 0; i < cnt; i++)
         {
             dbg_print(" 0x%x", out_buf[i]);
@@ -117,15 +117,15 @@ void dump_bfr(uint8_t out_buf[], uint32_t cnt)
                 dbg_print("\n\r");
             }
         }
-        dbg_print("..... \n\r");
     }
+    dbg_print("\n\r", __FUNCTION__);
 }
 
 void RCC_AHB1PeriphClockCmd(uint32_t RCC_AHB1Periph, FunctionalState NewState)
 {
     (void)NewState;
     (void)RCC_AHB1Periph;
-    dbg_print("pkhoo:%s\n\r", __FUNCTION__);
+    dbg_print("%s\n\r", __FUNCTION__);
 }
 /**
   * @brief  AES CBC Encryption example.
@@ -170,17 +170,18 @@ int32_t STM32_AES_CBC_Encrypt(uint8_t* InputMessage,
   /* Set iv size field to IvLength*/
   AESctx.mIvSize = IvLength;
 
-  dbg_print("......   Inputmessage\n\r");
+  dbg_print("...... Inputmessage(%d)\n\r", sizeof(Plaintext));
   dump_bfr(InputMessage, InputMessageLength);
 
-  dbg_print("......   Key\n\r");
+#ifdef INCLUDE_AES256
+  dbg_print("...... Key(%d)\n\r", sizeof(Key_256));
+#else
+  dbg_print("...... Key(%d)\n\r", sizeof(Key_192));
+#endif
   dump_bfr(AES192_Key, 32);
 
-  dbg_print("IvLength = 0x%d\n\r", IvLength);
+  dbg_print("...... IV(%d)\n\r", IvLength);
   dump_bfr(InitializationVector, IvLength);
-
-#if 1
-  dbg_print("%d\n\r", AESctx.mIvSize);
 
   /* Initialize the operation, by passing the key.
    * Third parameter is NULL because CBC doesn't use any IV */
@@ -196,10 +197,6 @@ int32_t STM32_AES_CBC_Encrypt(uint8_t* InputMessage,
                                           OutputMessage,
                                           &outputLength);
 
-    
-    dump_bfr(OutputMessage, 64);
-    dbg_print("............??\n\r");
-
     if (error_status == AES_SUCCESS)
     {
       /* Write the number of data written*/
@@ -210,8 +207,6 @@ int32_t STM32_AES_CBC_Encrypt(uint8_t* InputMessage,
       *OutputMessageLength += outputLength;
     }
   }
-#endif
-
   return error_status;
 }
 
@@ -230,12 +225,30 @@ TestStatus Buffercmp(const uint8_t* pBuffer, uint8_t* pBuffer1, uint16_t BufferL
     {
       return FAILED;
     }
-
     pBuffer++;
     pBuffer1++;
   }
 
   return PASSED;
+}
+
+bool chk_result(const uint8_t *expected, uint8_t *Odata, int32_t len)
+{
+    bool ret_val = false;
+    dump_bfr(Odata, len);
+    if (Buffercmp(expected, Odata, len) == PASSED)
+    {
+      /* add application traintment in case of AES CBC encrption is passed */   
+        dbg_print("****   Buffercmp Passed!\n\r");
+        ret_val = true;
+            
+    }
+    else
+    {
+        dbg_print("???? Buffercmp Failed? \n\r");
+      /* add application traintment in case of AES CBC encrption is failed */
+    }
+    return(ret_val);
 }
 
 void st_aes_cbc(void)
@@ -250,9 +263,9 @@ void st_aes_cbc(void)
      */
   int32_t status = AES_SUCCESS;
 
-  dbg_print("****************** STMicro CBC AES 256 ***************\n\r");
+  dbg_print("\n\n\r***********   STMicro CBC AES 256 ***********\n\n\r");
   /* DeInitialize STM32 Cryptographic Library */
-   Crypto_DeInit();
+  Crypto_DeInit();
 
   /* Encrypt DATA with AES in CBC mode */
 #ifdef INCLUDE_AES256 
@@ -263,40 +276,29 @@ void st_aes_cbc(void)
                             &OutputMessageLength);
 #endif
 
-
-  dbg_print("----------------  END AES Calculation ------------- \n\r");
-
   if (status == AES_SUCCESS)
   {
-    if (Buffercmp(Expected_Ciphertext, OutputMessage, PLAINTEXT_LENGTH) == PASSED)
-    {
-      /* add application traintment in case of AES CBC encrption is passed */   
-        dbg_print("pkhoo: %s - Buffercmp OK\n\r", __FUNCTION__);
-            
-    }
-    else
-    {
-        dbg_print("pkhoo: %s - Buffercmp Failed\n\r", __FUNCTION__);
-      /* add application traintment in case of AES CBC encrption is failed */
-    }
+    chk_result(Expected_Ciphertext,OutputMessage, sizeof(Plaintext));
   }
   else
   {
-    dbg_print("pkhoo: %s - CBC Encrypt Failed\n\r", __FUNCTION__);
+    dbg_print("%s - STmicro CBC Encrypt Failed\n\r", __FUNCTION__);
     /* Add application traintment in case of encryption/decryption not success possible values
        *  of status:
        * AES_ERR_BAD_CONTEXT, AES_ERR_BAD_PARAMETER, AES_ERR_BAD_INPUT_SIZE, AES_ERR_BAD_OPERATION
        */
   }
 }
+
 void kk_aes_cbc(void)
 {
-    dbg_print("****************** KeepKey CBC AES 256 ***************\n\r");
-#if 0
-    aes_decrypt_ctx ctx;
-    aes_decrypt_key256(data, &ctx);
-    aes_cbc_decrypt(msg->value.bytes, resp->value.bytes, msg->value.size, data + 32,
-#endif
+    uint8_t *key = Key_256;
+    aes_encrypt_ctx ctx;
+
+    dbg_print("\n\n\r***********   KeepKey CBC AES 256 ***********\n\n\r");
+    aes_encrypt_key256(key, &ctx);
+    aes_cbc_encrypt(Plaintext, OutputMessage, sizeof(Plaintext), IV, &ctx);
+    chk_result(Expected_Ciphertext,OutputMessage, sizeof(Plaintext));
 }
 void test_aes(void)
 {
