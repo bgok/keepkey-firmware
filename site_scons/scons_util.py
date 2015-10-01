@@ -230,7 +230,7 @@ def init_project(env, deps=None, libs=None, project_defines=None):
     if(libs != None):
 	deplibs.append(libs)
 
-    st_crypto_lib=os.getenv('PWD') + '/st_crypto/M3_CryptoFW_RngHW_2_0_6.lib'
+    st_crypto_lib=os.getenv('PWD') + '/keepkey_board/lib/M3_CryptoFW_RngHW_2_0_6.lib'
     platform_libs = ''
     if(build_os == 'linux'):
         platform_libs = '-Wl,-Bdynamic -lbsd'
