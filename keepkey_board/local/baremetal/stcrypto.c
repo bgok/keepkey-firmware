@@ -293,9 +293,6 @@ void kk_aes_cbc(void)
 }
 void test_aes(void)
 {
-    do
-    {
         st_aes_cbc();
         kk_aes_cbc();
-    }while (1);
 }
