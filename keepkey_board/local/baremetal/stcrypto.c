@@ -170,19 +170,6 @@ int32_t STM32_AES_CBC_Encrypt(uint8_t* InputMessage,
   /* Set iv size field to IvLength*/
   AESctx.mIvSize = IvLength;
 
-  dbg_print("...... Inputmessage(%d)\n\r", sizeof(Plaintext));
-  dump_bfr(InputMessage, InputMessageLength);
-
-#ifdef INCLUDE_AES256
-  dbg_print("...... Key(%d)\n\r", sizeof(Key_256));
-#else
-  dbg_print("...... Key(%d)\n\r", sizeof(Key_192));
-#endif
-  dump_bfr(AES192_Key, 32);
-
-  dbg_print("...... IV(%d)\n\r", IvLength);
-  dump_bfr(InitializationVector, IvLength);
-
   /* Initialize the operation, by passing the key.
    * Third parameter is NULL because CBC doesn't use any IV */
   error_status = AES_CBC_Encrypt_Init(&AESctx, AES192_Key, InitializationVector );
@@ -265,9 +252,10 @@ void st_aes_cbc(void)
 
   dbg_print("\n\n\r***********   STMicro CBC AES 256 ***********\n\n\r");
   /* DeInitialize STM32 Cryptographic Library */
-  Crypto_DeInit();
+//   Crypto_DeInit();
 
   /* Encrypt DATA with AES in CBC mode */
+  led_func(CLR_RED_LED);
 #ifdef INCLUDE_AES256 
   status = STM32_AES_CBC_Encrypt( (uint8_t *) Plaintext, PLAINTEXT_LENGTH, Key_256, IV, sizeof(IV), OutputMessage,
                             &OutputMessageLength);
@@ -275,6 +263,7 @@ void st_aes_cbc(void)
   status = STM32_AES_CBC_Encrypt( (uint8_t *) Plaintext, PLAINTEXT_LENGTH, Key_192, IV, sizeof(IV), OutputMessage,
                             &OutputMessageLength);
 #endif
+  led_func(SET_RED_LED);
 
   if (status == AES_SUCCESS)
   {
@@ -296,12 +285,17 @@ void kk_aes_cbc(void)
     aes_encrypt_ctx ctx;
 
     dbg_print("\n\n\r***********   KeepKey CBC AES 256 ***********\n\n\r");
+    led_func(CLR_GREEN_LED);
     aes_encrypt_key256(key, &ctx);
     aes_cbc_encrypt(Plaintext, OutputMessage, sizeof(Plaintext), IV, &ctx);
+    led_func(SET_GREEN_LED);
     chk_result(Expected_Ciphertext,OutputMessage, sizeof(Plaintext));
 }
 void test_aes(void)
 {
-    st_aes_cbc();
-    kk_aes_cbc();
+    do
+    {
+        st_aes_cbc();
+        kk_aes_cbc();
+    }while (1);
 }

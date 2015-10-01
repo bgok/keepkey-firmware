@@ -18,24 +18,6 @@ else:
     # Grab it from the path
     CROSS_COMPILE='arm-none-eabi-'
 
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-print "pkhoo: arm-none......py ..................................."
-
 OPENCM3_ROOT = os.path.join(Dir('#').abspath, 'libopencm3')
 
 SCM_REVISION = os.popen("git rev-parse HEAD").read().rstrip()
