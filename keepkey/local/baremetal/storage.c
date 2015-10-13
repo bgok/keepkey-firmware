@@ -73,6 +73,11 @@ static bool storage_from_flash(ConfigFlash *stor_config)
     switch(stor_config->storage.version)
     {
         case 1:
+	    memset(&shadow_config, 0, sizeof(shadow_config));
+            memcpy(&shadow_config, stor_config, sizeof(shadow_config));
+            break;
+
+        case 2:
             memcpy(&shadow_config, stor_config, sizeof(shadow_config));
             break;
 
@@ -1014,4 +1019,62 @@ Allocation get_storage_location(void)
 {
     return(storage_location);
 }
+
+#ifdef HAVE_U2F
+
+bool storage_is_u2f_initialized(void) 
+{
+    return shadow_config.storage.has_u2f_attestation_cert && (shadow_config.storage.u2f_attestation_cert.size != 0);
+}
+
+uint32_t storage_get_counter(void) 
+{
+	return shadow_config.storage.u2f_counter;
+}
+
+void storage_increase_counter(void) 
+{
+	shadow_config.storage.u2f_counter++;
+}
+
+void storage_set_counter(uint32_t counter)
+{
+    shadow_config.storage.u2f_counter = counter;
+    shadow_config.storage.has_u2f_counter = true;
+}
+
+uint8_t* storage_get_attestation_key(void) 
+{
+	return shadow_config.storage.u2f_attestation_key.bytes;	
+}
+
+void storage_set_attestation_key(uint8_t *key) 
+{
+	memcpy(shadow_config.storage.u2f_attestation_key.bytes, key, 32);
+    shadow_config.storage.has_u2f_attestation_key = true;
+}
+
+uint8_t* storage_get_attestation_certificate(void) 
+{
+	return shadow_config.storage.u2f_attestation_cert.bytes;
+}
+
+uint16_t storage_get_attestation_certificate_size(void) 
+{
+    return shadow_config.storage.u2f_attestation_cert.size;
+}
+
+bool storage_set_attestation_certificate(uint8_t *attestation_certificate, uint16_t length) 
+{
+	if (length > sizeof(shadow_config.storage.u2f_attestation_cert.bytes)) {
+		return false;
+	}
+	memcpy(shadow_config.storage.u2f_attestation_cert.bytes, attestation_certificate, length);
+	shadow_config.storage.u2f_attestation_cert.size = length;
+    shadow_config.storage.has_u2f_attestation_cert = true;
+	return true;	
+}
+
+#endif
+
 

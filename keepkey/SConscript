@@ -17,5 +17,13 @@ if int(ARGUMENTS.get('debug_link', 0)):
 else:
     env = add_flags(env, ['-DDEBUG_LINK=0'])
 
+#
+# U2F
+#
+if int(ARGUMENTS.get('u2f', 0)):
+    env = add_flags(env, ['-DHAVE_U2F=1'])
+else:
+    env = add_flags(env, ['-DHAVE_U2F=0'])
+
 init_project(env, deps=deps, libs=['opencm3_stm32f2'])
 

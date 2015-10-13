@@ -22,6 +22,7 @@ def proc_args():
                         help = 'Build specifc build type (bstrap, bldr, app).', 
                         action = 'store')
     parser.add_argument('-d',  '--debug', help = 'Build debug variant.', action = 'store_true')
+    parser.add_argument('-u2f', '--u2f', help = 'Build with U2F variant.', action = 'store_true')
     parser.add_argument('-v',  '--verbose', help = 'Build with verbose output.', action = 'store_true')
     args = parser.parse_args()
 
@@ -49,6 +50,8 @@ def main():
         buildargs += ' debug=1'
     if args.verbose:
         buildargs += ' verbose=1'
+    if args.u2f:
+        buildargs += ' u2f=1'
 
     target ='arm-none-gnu-eabi'
     local('scons ' + 'target='+target + buildargs)

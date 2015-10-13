@@ -118,3 +118,11 @@ DebugLinkState.storage_hash    max_size:32
 
 DebugLinkLog.bucket			max_size:33
 DebugLinkLog.text			max_size:256
+
+U2FInit.u2f_attestation_key     max_size:32
+U2FInit.u2f_attestation_cert    max_size:500
+
+U2FSetEntry.uri                 max_size:512
+U2FSetEntry.name                max_size:20
+
+

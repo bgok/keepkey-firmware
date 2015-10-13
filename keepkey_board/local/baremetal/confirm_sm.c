@@ -397,6 +397,24 @@ bool confirm_without_button_request(const char *request_title, const char *reque
     return confirm_helper(request_title, strbuf, &layout_standard_notification);
 }
 
+#ifdef HAVE_U2F
+
+bool confirm_with_custom_layout_without_button_request(layout_notification_t layout_notification_func,
+                                const char *request_title, const char *request_body, ...)
+{
+    button_request_acked = true;
+
+    va_list vl;
+    va_start(vl, request_body);
+    char strbuf[BODY_CHAR_MAX];
+    vsnprintf(strbuf, BODY_CHAR_MAX, request_body, vl);
+    va_end(vl);
+
+    return confirm_helper(request_title, strbuf, layout_notification_func);
+}
+
+#endif
+
 /*
  * review() - Acts like confirm but always returns true even if it was canceled via host
  *

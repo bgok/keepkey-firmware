@@ -75,4 +75,10 @@ void fsm_msgDebugLinkGetState(DebugLinkGetState *msg);
 void fsm_msgDebugLinkStop(DebugLinkStop *msg);
 #endif
 
+#if HAVE_U2F
+void fsm_msgU2FInit(U2FInit *msg);
+void fsm_msgU2FGetCounter(U2FGetCounter *msg);
+void fsm_msgU2FSetEntry(U2FSetEntry *msg);
+#endif
+
 #endif

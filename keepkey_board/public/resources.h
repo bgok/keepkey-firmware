@@ -56,6 +56,23 @@ const Image *get_unplug_image(void);
 const Image *get_recovery_image(void);
 const Image *get_warning_image(void);
 
+#if HAVE_U2F
+
+typedef struct
+{
+	const Image 	*image;
+	uint8_t			appId[32];	
+	char			commonName[20];
+} U2fWellKnown;
+
+const Image *get_ledger_logo_image(void);
+const Image *get_github_logo_image(void);
+const Image *get_google_logo_image(void);
+const Image *get_dropbox_logo_image(void);
+const U2fWellKnown *get_u2f_well_known(void);
+
+#endif
+
 const ImageAnimation *get_confirm_icon_animation(void);
 const ImageAnimation *get_confirming_animation(void);
 const ImageAnimation *get_loading_animation(void);

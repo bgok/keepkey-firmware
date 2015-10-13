@@ -72,5 +72,9 @@ bool usb_tx(uint8_t *message, uint32_t len);
 bool usb_debug_tx(uint8_t *message, uint32_t len);
 void usb_set_debug_rx_callback(usb_rx_callback_t callback);
 #endif
+#if HAVE_U2F
+bool usb_u2f_tx(uint8_t *message, uint32_t len);
+void usb_set_u2f_rx_callback(usb_rx_callback_t callback);
+#endif
 
 #endif

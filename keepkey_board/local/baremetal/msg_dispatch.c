@@ -27,6 +27,8 @@
 #include "usb_driver.h"
 #include "msg_dispatch.h"
 
+#include "msg_init_app.h"
+
 /* === Private Variables =================================================== */
 
 static const MessagesMap_t *MessagesMap = NULL;
@@ -504,6 +506,7 @@ void msg_init(void)
 #if DEBUG_LINK
     usb_set_debug_rx_callback(handle_debug_usb_rx);
 #endif
+    msg_init_app();
 }
 
 /*

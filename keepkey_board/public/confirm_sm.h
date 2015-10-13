@@ -79,6 +79,10 @@ bool confirm(ButtonRequestType type, const char *request_title, const char *requ
 bool confirm_with_custom_layout(layout_notification_t layout_notification_func,
                                 ButtonRequestType type,
                                 const char *request_title, const char *request_body, ...);
+#if HAVE_U2F
+bool confirm_with_custom_layout_without_button_request(layout_notification_t layout_notification_func,
+                                const char *request_title, const char *request_body, ...);
+#endif
 bool confirm_without_button_request(const char *request_title, const char *request_body,
                                     ...);
 bool review(ButtonRequestType type, const char *request_title, const char *request_body,

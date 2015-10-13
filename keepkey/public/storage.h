@@ -30,7 +30,7 @@
 
 /* === Defines ============================================================= */
 
-#define STORAGE_VERSION 1
+#define STORAGE_VERSION 2 
 #define PBKDF2_HMAC_SHA512_SALT "TREZORHD"
 
 #define STORAGE_RETRIES 3
@@ -86,4 +86,22 @@ HDNodeType *storage_get_node(void);
 
 Allocation get_storage_location(void);
 
+#ifdef HAVE_U2F
+
+bool storage_is_u2f_initialized(void);
+
+uint32_t storage_get_counter(void);
+void storage_increase_counter(void);
+void storage_set_counter(uint32_t counter);
+
+uint8_t* storage_get_attestation_key(void);
+void storage_set_attestation_key(uint8_t *key);
+
+uint8_t* storage_get_attestation_certificate(void);
+uint16_t storage_get_attestation_certificate_size(void);
+bool storage_set_attestation_certificate(uint8_t *attestation_certificate, uint16_t length);
+
 #endif
+
+#endif
+

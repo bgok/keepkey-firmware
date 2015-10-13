@@ -34,6 +34,9 @@
 
 /* === Private Variables =================================================== */
 
+#define ENDPOINT_ADDRESS_U2F_IN   (0x83)
+#define ENDPOINT_ADDRESS_U2F_OUT  (0x03)
+
 static uint8_t usbd_control_buffer[USBD_CONTROL_BUFFER_SIZE];
 
 /* USB Device state structure.  */
@@ -125,6 +128,37 @@ static const uint8_t hid_report_descriptor[] = {
 	0x95, 0x13, 0x09, 0x01, 0xB1, 0x02, 0xC0,
 };
 
+#if HAVE_U2F
+
+// This grants u2fDevices permission on Chrome
+// https://chromium.googlesource.com/chromium/src.git/+/667c5595a7326d7e57375afbd2be922dd3a8810f/extensions/browser/api/hid/hid_device_manager.cc#134 
+
+static const uint8_t hid_report_descriptor_u2f[] = {
+        0x06, 0xD0, 0xF1,       // Usage page (vendor defined) 
+        0x09, 0x01,     // Usage ID (vendor defined)
+        0xA1, 0x01,     // Collection (application)
+
+                // The Input report
+        0x09, 0x03,             // Usage ID - vendor defined
+        0x15, 0x00,             // Logical Minimum (0)
+        0x26, 0xFF, 0x00,   // Logical Maximum (255)
+        0x75, 0x08,             // Report Size (255 bits)
+        0x95, 0x40,           // Report Count (2 fields)
+        0x81, 0x08,             // Input (Data, Variable, Absolute)  
+
+                // The Output report
+        0x09, 0x04,             // Usage ID - vendor defined
+        0x15, 0x00,             // Logical Minimum (0)
+        0x26, 0xFF, 0x00,   // Logical Maximum (255)
+        0x75, 0x08,             // Report Size (255 bits)
+        0x95, 0x40,           // Report Count (2 fields)
+        0x91, 0x08,             // Output (Data, Variable, Absolute)  
+
+        0xC0 // end
+};
+
+#endif
+
 static const struct {
 	struct usb_hid_descriptor hid_descriptor;
 	struct {
@@ -144,6 +178,30 @@ static const struct {
 		.wDescriptorLength = sizeof(hid_report_descriptor),
 	}
 };
+
+#if HAVE_U2F
+
+static const struct {
+        struct usb_hid_descriptor hid_descriptor;
+        struct {
+                uint8_t bReportDescriptorType;
+                uint16_t wDescriptorLength;
+        } __attribute__((packed)) hid_report_u2f;
+} __attribute__((packed)) hid_function_u2f = {
+        .hid_descriptor = {
+                .bLength = sizeof(hid_function_u2f),
+                .bDescriptorType = USB_DT_HID,
+                .bcdHID = 0x0111,
+                .bCountryCode = 0,
+                .bNumDescriptors = 1,
+        },
+        .hid_report_u2f = {
+                .bReportDescriptorType = USB_DT_REPORT,
+                .wDescriptorLength = sizeof(hid_report_descriptor_u2f),
+        }
+};
+
+#endif
 
 static const struct usb_endpoint_descriptor hid_endpoints[] = {{
 	.bLength = USB_DT_ENDPOINT_SIZE,
@@ -209,10 +267,58 @@ static const struct usb_interface_descriptor hid_iface_debug[] = {{
 }};
 #endif
 
+#if HAVE_U2F
+static const struct usb_endpoint_descriptor hid_endpoints_u2f[] = {{
+        .bLength = USB_DT_ENDPOINT_SIZE,
+        .bDescriptorType = USB_DT_ENDPOINT,
+        .bEndpointAddress = ENDPOINT_ADDRESS_U2F_IN,
+        .bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
+        .wMaxPacketSize = USB_SEGMENT_SIZE,
+        .bInterval = 1,
+}, {
+        .bLength = USB_DT_ENDPOINT_SIZE,
+        .bDescriptorType = USB_DT_ENDPOINT,
+        .bEndpointAddress = ENDPOINT_ADDRESS_U2F_OUT,
+        .bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
+        .wMaxPacketSize = USB_SEGMENT_SIZE,
+        .bInterval = 1,
+}};
+
+static const struct usb_interface_descriptor hid_iface_u2f[] = {{
+        .bLength = USB_DT_INTERFACE_SIZE,
+        .bDescriptorType = USB_DT_INTERFACE,
+#if DEBUG_LINK
+        .bInterfaceNumber = 2,
+#else
+	.bInterfaceNumber = 1,
+#endif
+        .bAlternateSetting = 0,
+        .bNumEndpoints = 2,
+        .bInterfaceClass = USB_CLASS_HID,
+        .bInterfaceSubClass = 0,
+        .bInterfaceProtocol = 0,
+        .iInterface = 0,
+        .endpoint = hid_endpoints_u2f,
+        .extra = &hid_function_u2f,
+        .extralen = sizeof(hid_function_u2f),
+}};
+#endif
+
 static const struct usb_interface ifaces[] = {{
 	.num_altsetting = 1,
 	.altsetting = hid_iface,
-#if DEBUG_LINK
+#if DEBUG_LINK && HAVE_U2F
+}, {
+	.num_altsetting = 1,
+	.altsetting = hid_iface_debug,
+}, {
+	.num_altsetting = 1,
+	.altsetting = hid_iface_u2f
+#elif HAVE_U2F
+}, {
+        .num_altsetting = 1,
+        .altsetting = hid_iface_u2f,
+#elif DEBUG_LINK
 }, {
 	.num_altsetting = 1,
 	.altsetting = hid_iface_debug,
@@ -223,7 +329,11 @@ static const struct usb_config_descriptor config = {
 	.bLength = USB_DT_CONFIGURATION_SIZE,
 	.bDescriptorType = USB_DT_CONFIGURATION,
 	.wTotalLength = 0,
-#if DEBUG_LINK
+#if DEBUG_LINK && HAVE_U2F
+	.bNumInterfaces = 3,
+#elif DEBUG_LINK
+	.bNumInterfaces = 2,
+#elif HAVE_U2F
 	.bNumInterfaces = 2,
 #else
 	.bNumInterfaces = 1,
@@ -250,6 +360,10 @@ usb_rx_callback_t user_rx_callback = NULL;
 usb_rx_callback_t user_debug_rx_callback = NULL;
 #endif
 
+#if HAVE_U2F
+usb_rx_callback_t u2f_rx_callback = NULL;
+#endif
+
 /* === Private Functions =================================================== */
 
 static int hid_control_request(usbd_device *dev, struct usb_setup_data *req, uint8_t **buf, uint16_t *len,
@@ -263,9 +377,24 @@ static int hid_control_request(usbd_device *dev, struct usb_setup_data *req, uin
 	    (req->wValue != 0x2200))
 		return 0;
 
+#if HAVE_U2F == 0
 	/* Handle the HID report descriptor. */
 	*buf = (uint8_t *)hid_report_descriptor;
 	*len = sizeof(hid_report_descriptor);
+#else
+#if HAVE_U2F && DEBUG_LINK
+	if (req->wIndex < 2) {
+#else
+	if (!req->wIndex) {
+#endif
+	        *buf = (uint8_t *)hid_report_descriptor;
+       	 	*len = sizeof(hid_report_descriptor);
+	}
+	else {
+	        *buf = (uint8_t *)hid_report_descriptor_u2f;
+       		*len = sizeof(hid_report_descriptor_u2f);
+	}
+#endif
 	return 1;
 }
 
@@ -327,6 +456,26 @@ static void hid_debug_rx_callback(usbd_device *dev, uint8_t ep)
 }
 #endif
 
+#if HAVE_U2F
+static void hid_u2f_rx_callback(usbd_device *dev, uint8_t ep)
+{
+    (void)ep;
+
+    /* Receive into the message buffer. */
+    UsbMessage m;
+    uint16_t rx = usbd_ep_read_packet(dev,
+                                      ENDPOINT_ADDRESS_U2F_OUT,
+                                      m.message,
+                                      USB_SEGMENT_SIZE);
+
+    if(rx && u2f_rx_callback)
+    {
+        m.len = rx;
+        u2f_rx_callback(&m);
+    }
+}
+#endif
+
 /*
  * hid_set_config_callback() - Config USB IN/OUT endpoints and register callbacks
  *
@@ -345,6 +494,10 @@ static void hid_set_config_callback(usbd_device *dev, uint16_t wValue)
 #if DEBUG_LINK
 	usbd_ep_setup(dev, ENDPOINT_ADDRESS_DEBUG_IN,  USB_ENDPOINT_ATTR_INTERRUPT, USB_SEGMENT_SIZE, 0);
 	usbd_ep_setup(dev, ENDPOINT_ADDRESS_DEBUG_OUT, USB_ENDPOINT_ATTR_INTERRUPT, USB_SEGMENT_SIZE, hid_debug_rx_callback);
+#endif
+#if HAVE_U2F
+        usbd_ep_setup(dev, ENDPOINT_ADDRESS_U2F_IN,  USB_ENDPOINT_ATTR_INTERRUPT, USB_SEGMENT_SIZE, 0);
+        usbd_ep_setup(dev, ENDPOINT_ADDRESS_U2F_OUT, USB_ENDPOINT_ATTR_INTERRUPT, USB_SEGMENT_SIZE, hid_u2f_rx_callback);
 #endif
 
 	usbd_register_control_callback(
@@ -385,6 +538,29 @@ static bool usb_tx_helper(uint8_t *message, uint32_t len, uint8_t endpoint)
 
     return(true);
 }
+
+#if HAVE_U2F
+
+static bool usb_tx_helper_raw(uint8_t *message, uint32_t len, uint8_t endpoint) 
+{
+    uint32_t pos = 0;
+
+    /* Chunk out message */
+    while(pos < len)
+    {
+        uint8_t tmp_buffer[USB_SEGMENT_SIZE] = { 0 };
+
+        memcpy(tmp_buffer, message + pos, USB_SEGMENT_SIZE);
+
+        while(usbd_ep_write_packet(usbd_dev, endpoint, tmp_buffer, USB_SEGMENT_SIZE) == 0) {};
+
+        pos += USB_SEGMENT_SIZE;
+    }
+
+    return(true);
+}
+
+#endif
 
 /* === Functions =========================================================== */
 
@@ -469,6 +645,13 @@ bool usb_debug_tx(uint8_t *message, uint32_t len)
 }
 #endif
 
+#if HAVE_U2F
+bool usb_u2f_tx(uint8_t *message, uint32_t len) 
+{
+    return usb_tx_helper_raw(message, len, ENDPOINT_ADDRESS_U2F_IN);
+}
+#endif
+
 /*
  * usb_set_rx_callback() - Setup USB receive callback function pointer
  *
@@ -494,6 +677,13 @@ void usb_set_rx_callback(usb_rx_callback_t callback)
 void usb_set_debug_rx_callback(usb_rx_callback_t callback)
 {
     user_debug_rx_callback = callback;
+}
+#endif
+
+#if HAVE_U2F
+void usb_set_u2f_rx_callback(usb_rx_callback_t callback)
+{
+    u2f_rx_callback = callback;
 }
 #endif
 

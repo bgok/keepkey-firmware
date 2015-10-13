@@ -55,6 +55,13 @@
 #include "recovery.h"
 #include "recovery_cipher.h"
 
+#ifdef HAVE_U2F
+
+#include <sha2.h>
+#include "msg_init_app.h"
+
+#endif
+
 /* === Private Variables =================================================== */
 
 static uint8_t msg_resp[MAX_FRAME_SIZE];
@@ -125,6 +132,13 @@ static const MessagesMap_t MessagesMap[] =
     DEBUG_OUT(MessageType_MessageType_DebugLinkState, DebugLinkState_fields,        NO_PROCESS_FUNC)
     DEBUG_OUT(MessageType_MessageType_DebugLinkLog, DebugLinkLog_fields,            NO_PROCESS_FUNC)
 #endif
+
+#if HAVE_U2F
+    MSG_IN(MessageType_MessageType_U2FInit,             U2FInit_fields,             (void (*)(void *))fsm_msgU2FInit)
+    MSG_IN(MessageType_MessageType_U2FGetCounter,       U2FGetCounter_fields,       (void (*)(void *))fsm_msgU2FGetCounter)
+    MSG_IN(MessageType_MessageType_U2FSetEntry,         U2FSetEntry_fields,         (void (*)(void *))fsm_msgU2FSetEntry)
+    MSG_OUT(MessageType_MessageType_U2FCounter,         U2FCounter_fields,          NO_PROCESS_FUNC)    
+#endif    
 };
 
 /* === Variables =========================================================== */
@@ -1327,4 +1341,48 @@ void fsm_msgDebugLinkStop(DebugLinkStop *msg)
 {
     (void)msg;
 }
+#endif
+
+#if HAVE_U2F
+
+void fsm_msgU2FInit(U2FInit *msg)
+{
+    if (storage_is_u2f_initialized()) {
+        fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
+                        "U2F is already initialized");
+        return;                
+    }
+    storage_set_attestation_key(msg->u2f_attestation_key.bytes);
+    storage_set_attestation_certificate(msg->u2f_attestation_cert.bytes, msg->u2f_attestation_cert.size);
+    storage_set_counter(msg->u2f_counter);
+    storage_commit();
+    fsm_sendSuccess("U2F initialized");
+}
+
+void fsm_msgU2FGetCounter(U2FGetCounter *msg) 
+{
+    (void)msg;
+    if (!storage_is_u2f_initialized()) {
+        fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
+                        "U2F is not initialized");
+        return;        
+    }
+    RESP_INIT(U2FCounter);
+    resp->u2f_counter = storage_get_counter();
+    msg_write(MessageType_MessageType_U2FCounter, resp);    
+}
+
+void fsm_msgU2FSetEntry(U2FSetEntry *msg)
+{
+    uint8_t appId[32];
+    if (!storage_is_u2f_initialized()) {
+        fsm_sendFailure(FailureType_Failure_UnexpectedMessage,
+                        "U2F is not initialized");
+        return;        
+    }
+    sha256_Raw((uint8_t*)msg->uri, strlen(msg->uri), appId);
+    u2f_set_transient_entry(appId, msg->name);
+    fsm_sendSuccess("Transient U2F entry added");       
+}
+
 #endif
