@@ -27,10 +27,12 @@
 static const uint8_t BROADCAST_CHANNEL[] = { 0xff, 0xff, 0xff, 0xff };
 
 void u2f_transport_handle(u2f_service_t *service, uint8_t *buffer, uint16_t size) {
-	// If busy, answer immediately - this could be delegated to the upper layer
-	if ((service->transportState == U2F_PROCESSING_COMMAND) || (service->transportState == U2F_SENDING_RESPONSE)) {
-			u2f_response_error(service, ERROR_CHANNEL_BUSY, false);
-			goto error;					
+	// If busy, answer immediately
+	if (service->noReentry) {
+		if ((service->transportState == U2F_PROCESSING_COMMAND) || (service->transportState == U2F_SENDING_RESPONSE)) {
+				u2f_response_error(service, ERROR_CHANNEL_BUSY, false);
+				goto error;					
+		}
 	}
 	if (size < 5) {
 		// Message to short, abort
@@ -102,7 +104,7 @@ void u2f_transport_handle(u2f_service_t *service, uint8_t *buffer, uint16_t size
 	}
 	// See if we can process the command
 	if (service->transportOffset >= (service->lastCommandLength + U2F_COMMAND_HEADER_SIZE)) {		
-		service->transportState = U2F_PROCESSING_COMMAND;
+		service->transportState = U2F_PROCESSING_COMMAND;		
 		service->handleFunction(service, service->messageBuffer);
 	}
 	else {
