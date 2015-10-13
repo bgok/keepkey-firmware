@@ -1020,7 +1020,7 @@ Allocation get_storage_location(void)
     return(storage_location);
 }
 
-#ifdef HAVE_U2F
+#if HAVE_U2F
 
 bool storage_is_u2f_initialized(void) 
 {

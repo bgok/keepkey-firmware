@@ -55,7 +55,7 @@
 #include "recovery.h"
 #include "recovery_cipher.h"
 
-#ifdef HAVE_U2F
+#if HAVE_U2F
 
 #include <sha2.h>
 #include "msg_init_app.h"

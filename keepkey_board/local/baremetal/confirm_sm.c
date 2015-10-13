@@ -397,7 +397,7 @@ bool confirm_without_button_request(const char *request_title, const char *reque
     return confirm_helper(request_title, strbuf, &layout_standard_notification);
 }
 
-#ifdef HAVE_U2F
+#if HAVE_U2F
 
 bool confirm_with_custom_layout_without_button_request(layout_notification_t layout_notification_func,
                                 const char *request_title, const char *request_body, ...)
