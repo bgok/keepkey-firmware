@@ -23,6 +23,8 @@
 #include "u2f_transport.h"
 #include "u2f_processing.h"
 
+#if HAVE_U2F
+
 void u2f_reset(u2f_service_t *service, bool keepUserPresence) {
 	service->transportState = U2F_IDLE;
 	service->promptUserPresence = false;
@@ -99,4 +101,6 @@ void u2f_confirm_user_presence(u2f_service_t *service, bool userPresence, bool r
 	}
 	service->promptUserPresence = false;
 }
+
+#endif
 

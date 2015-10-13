@@ -29,6 +29,8 @@
 #include "aes.h"
 #include "u2f_crypto.h"
 
+#if HAVE_U2F
+
 static uint8_t privateKeySession[32];
 static SHA256_CTX sha256;
 
@@ -175,4 +177,7 @@ uint16_t u2f_crypto_sign_attestation(uint8_t *signature) {
 void u2f_crypto_reset() {
 	memset(privateKeySession, 0, 32);
 }
+
+#endif
+
 

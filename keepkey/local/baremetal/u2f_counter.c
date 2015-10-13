@@ -21,6 +21,8 @@
 #include <string.h>
 #include "storage.h"
 
+#if HAVE_U2F
+
 void u2f_counter_init(void) {
 }
 
@@ -34,3 +36,6 @@ uint8_t u2f_counter_increase_and_get(uint8_t *buffer) {
 	buffer[3] = (counter & 0xff);
 	return 4;
 }
+
+#endif
+
