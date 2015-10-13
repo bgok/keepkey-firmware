@@ -12,11 +12,7 @@ You can follow those steps to create a self signed certificate with OpenSSL
 
 ```
 openssl ecparam -out attestation_private_key.pem -name prime256v1 -genkey
-```
-```
 openssl req -new -key attestation_private_key.pem -out attestation_cert.csr
-```
-```
 openssl x509 -req -days 3650 -in attestation_cert.csr -signkey attestation_private_key.pem -out attestation_cert.der -outform der
 ```
 
@@ -72,3 +68,7 @@ Open Source code :
    * https://www.yubico.com/applications/fido/
    * https://github.com/google/u2f-ref-code
    * http://www.gluu.org/
+
+### Acknowledgements 
+
+This implementation has been developed and is maintained by Ledger (hello@ledger.fr)
