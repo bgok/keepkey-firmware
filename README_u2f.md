@@ -4,6 +4,10 @@ U2F is an open protocol standardized by the [FIDO Alliance](https://www.fidoalli
 
 The optional U2F feature lets you use your KeepKey device as a U2F token on any compatible website. At the present time, U2F support has been enabled for [Google accounts](https://support.google.com/accounts/answer/6103523), [Github](https://github.com/blog/2071-github-supports-universal-2nd-factor-authentication) and [Dropbox](https://blogs.dropbox.com/dropbox/2015/08/u2f-security-keys/) for Chrome and Chromium browsers. Multiple Open Source implementations are also available.
 
+### Using with a PIN or passphrase set 
+
+Make sure that you unlock your KeepKey through a third party application before using it with a U2F client - otherwise U2F functionalities will be disabled.
+
 ### Building with U2F support 
 
 Add -u to your ./b call
