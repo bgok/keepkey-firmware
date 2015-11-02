@@ -95,7 +95,7 @@ void prompt_user_presence(u2f_service_t *service, bool enroll, uint8_t *applicat
       "U2F authentication", 
       message);
   u2f_confirm_user_presence(service, confirmed, false);
-  u2f_reset(service, true);
+  u2f_clear_running_command(service);
   go_home();
 }
 

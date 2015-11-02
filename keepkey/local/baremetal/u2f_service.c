@@ -26,12 +26,16 @@
 #if HAVE_U2F
 
 void u2f_reset(u2f_service_t *service, bool keepUserPresence) {
-	service->transportState = U2F_IDLE;
+	service->transportState = U2F_IDLE;	
 	service->promptUserPresence = false;
 	if (!keepUserPresence) {
 		service->userPresence = false;
 		memset(service->confirmedApplicationParameter, 0, 32);
 	}
+}
+
+void u2f_clear_running_command(u2f_service_t *service) {
+	service->runningCommand = false;
 }
 
 void u2f_initialize_service(u2f_service_t *service) {

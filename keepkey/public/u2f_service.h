@@ -45,6 +45,7 @@ typedef struct u2f_service_t {
 	u2f_transport_state_t			transportState;
 	uint8_t							expectedContinuationPacket;
 	uint16_t						lastCommandLength;
+	bool							runningCommand;
 
 	u2fHandle_t						handleFunction;
 
@@ -67,6 +68,7 @@ typedef struct u2f_service_t {
 	uint8_t							*messageBuffer;	
 	uint16_t						messageBufferSize;		
 	uint8_t							*confirmedApplicationParameter;
+	bool							noReentry;
 } u2f_service_t;
 
 void u2f_initialize_service(u2f_service_t *service);
@@ -75,5 +77,6 @@ void u2f_send_fragmented_response(u2f_service_t *service, uint8_t cmd, uint8_t *
 void u2f_confirm_user_presence(u2f_service_t *service, bool userPresence, bool resume);
 void u2f_continue_sending_fragmented_response(u2f_service_t *service);
 void u2f_reset(u2f_service_t *service, bool keepUserPresence);
+void u2f_clear_running_command(u2f_service_t *service);
 
 #endif

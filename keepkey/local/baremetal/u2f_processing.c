@@ -59,10 +59,12 @@ void u2f_handle_enroll(u2f_service_t *service, uint8_t p1, uint8_t p2, uint8_t *
 	(void)p1;
 	(void)p2;
 	if (length != 32 + 32) {
+		u2f_clear_running_command(service);
 		u2f_response_error(service, ERROR_PROP_INVALID_DATA_LENGTH_APDU, true);
 		return;
 	}	
 	if (!u2f_crypto_available()) {
+		u2f_clear_running_command(service);
 		u2f_response_error(service, ERROR_PROP_DEVICE_NOT_SETUP, true);
 		return;
 	}
@@ -106,10 +108,12 @@ void u2f_handle_enroll(u2f_service_t *service, uint8_t p1, uint8_t p2, uint8_t *
 		offset += signatureLength;
 		memcpy(service->messageBuffer + offset, SW_SUCCESS, sizeof(SW_SUCCESS));
 		offset += sizeof(SW_SUCCESS);
+		u2f_clear_running_command(service);
 		u2f_send_fragmented_response(service, U2F_CMD_MSG, service->messageBuffer, offset, true);
 	}
 	return;
 internal_error:		
+		u2f_clear_running_command(service);
 		u2f_response_error(service, ERROR_PROP_INTERNAL_ERROR_APDU, true);
 		u2f_crypto_reset();	
 }
@@ -123,14 +127,17 @@ void u2f_handle_sign(u2f_service_t *service, uint8_t p1, uint8_t p2, uint8_t *bu
 	bool sign = (p1 == P1_SIGN_SIGN);
 
 	if (length < 32 + 32 + 1) {
+		u2f_clear_running_command(service);
 		u2f_response_error(service, ERROR_PROP_INVALID_DATA_LENGTH_APDU, true);
 		return;
 	}	
 	if ((p1 != P1_SIGN_CHECK_ONLY) && (p1 != P1_SIGN_SIGN)) {
+		u2f_clear_running_command(service);
 		u2f_response_error(service, ERROR_PROP_INVALID_PARAMETERS_APDU, true);
 		return;		
 	}
 	if (!u2f_crypto_available()) {
+		u2f_clear_running_command(service);
 		u2f_response_error(service, ERROR_PROP_DEVICE_NOT_SETUP, true);
 		return;
 	}
@@ -138,6 +145,7 @@ void u2f_handle_sign(u2f_service_t *service, uint8_t p1, uint8_t p2, uint8_t *bu
 	memcpy(applicationParameter, buffer + 32, 32);
 	keyHandleLength = buffer[64];
 	if (keyHandleLength > sizeof(keyHandle)) {
+		u2f_clear_running_command(service);
 		u2f_response_error(service, ERROR_PROP_INVALID_DATA_APDU, true);
 		return;				
 	}
@@ -146,6 +154,7 @@ void u2f_handle_sign(u2f_service_t *service, uint8_t p1, uint8_t p2, uint8_t *bu
 	// Check the key handle validity immediately
 	if (!u2f_crypto_unwrap(keyHandle, keyHandleLength, applicationParameter)) {
 		u2f_crypto_reset();		
+		u2f_clear_running_command(service);
 		u2f_send_fragmented_response(service, U2F_CMD_MSG, (uint8_t*)SW_BAD_KEY_HANDLE, sizeof(SW_BAD_KEY_HANDLE), true);	
 		return;
 	}
@@ -176,6 +185,7 @@ void u2f_handle_sign(u2f_service_t *service, uint8_t p1, uint8_t p2, uint8_t *bu
 		uint16_t offset = 0;
 		uint16_t signatureLength;
 		if (!sign) {
+			u2f_clear_running_command(service);
 			u2f_send_fragmented_response(service, U2F_CMD_MSG, (uint8_t*)SW_PROOF_OF_PRESENCE_REQUIRED, sizeof(SW_PROOF_OF_PRESENCE_REQUIRED), true);	
 			return;
 		}
@@ -196,10 +206,12 @@ void u2f_handle_sign(u2f_service_t *service, uint8_t p1, uint8_t p2, uint8_t *bu
 		offset += signatureLength;
 		memcpy(service->messageBuffer + offset, SW_SUCCESS, sizeof(SW_SUCCESS));
 		offset += sizeof(SW_SUCCESS);		
+		u2f_clear_running_command(service);
 		u2f_send_fragmented_response(service, U2F_CMD_MSG, service->messageBuffer, offset, true);
 	}
 	return;
 internal_error:		
+		u2f_clear_running_command(service);
 		u2f_response_error(service, ERROR_PROP_INTERNAL_ERROR_APDU, true);
 		u2f_crypto_reset();	
 }
@@ -209,6 +221,7 @@ void u2f_handle_get_version(u2f_service_t *service, uint8_t p1, uint8_t p2, uint
 	(void)p2;
 	(void)buffer;
 	(void)length;
+	u2f_clear_running_command(service);
 	u2f_send_fragmented_response(service, U2F_CMD_MSG, (uint8_t*)VERSION, sizeof(VERSION), true);
 }
 
@@ -260,6 +273,7 @@ void u2f_handle_cmd_msg(u2f_service_t *service, uint8_t *buffer, uint16_t length
 			u2f_handle_get_version(service, p1, p2, buffer + 7, dataLength);
 			break;
 		default:
+			u2f_clear_running_command(service);
 			u2f_response_error(service, ERROR_PROP_UNSUPPORTED_MSG_APDU, true);
 			return;		
 	}
@@ -277,6 +291,11 @@ void u2f_process_message(u2f_service_t *service, uint8_t *buffer) {
 			u2f_handle_cmd_ping(service, buffer + 3, length);
 			break;		
 		case U2F_CMD_MSG:
+			if (!service->noReentry && service->runningCommand) {
+				u2f_response_error(service, ERROR_CHANNEL_BUSY, false);
+				break;
+			}
+			service->runningCommand = true;
 			u2f_handle_cmd_msg(service, buffer + 3, length);
 			break;
 	}
